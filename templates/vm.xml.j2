@@ -20,8 +20,9 @@
     <bootmenu enable='no'/>
     <boot dev='hd'/>
     <boot dev='cdrom'/>
-    <boot dev='network'/>
+    {% if enable_console | bool or console_log_enabled | bool %}
     <bios useserial='yes'/>
+    {% endif %}
     {% if boot_firmware == "efi"  %}
       {# NOTE: pflash requires qemu 1.6 or newer. There are alternatives for older versions, but
                they do not work with secure boot. See OVMF readme for an overview #}
@@ -106,7 +107,7 @@
       <source path='{{ console_log_path }}'/>
       <target type='serial'/>
     </console>
-{% else %}
+{% elif enable_console | bool %}
     <serial type='pty'>
       <target port='0'/>
     </serial>
