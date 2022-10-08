@@ -60,7 +60,7 @@
       --copy-in {{ r.dest }}:/etc/sysconfig/network-scripts
       --move /etc/sysconfig/network-scripts/{{ r.dest | basename }}:/etc/sysconfig/network-scripts/{{ (r.dest | basename).replace(vm.name, 'ifcfg') }}
       {% endfor %}
-  when: __ifcfg.changed
+  when: __ifcfg.changed or __vm_defined.changed
 
 - name: Ensure the VM is running and started at boot
   community.libvirt.virt:
