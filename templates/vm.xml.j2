@@ -5,6 +5,13 @@
   {% elif (libvirt_vm_default_uuid_deterministic | bool) or (vm.uuid_deterministic is defined and (vm.uuid_deterministic | bool)) %}
   <uuid>{{ vm.name | to_uuid }}</uuid>
   {% endif %}
+  {% if vm.os_id is defined %}
+  <metadata>
+    <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0">
+      <libosinfo:os id="{{ vm.os_id  }}"/>
+    </libosinfo:libosinfo>
+  </metadata>
+  {% endif %}
   <memory>{{ vm.memory_mb | int * 1024 }}</memory>
   <vcpu>{{ vm.vcpus }}</vcpu>
   {% if vm.clock_offset |default( libvirt_vm_clock_offset ) %}
