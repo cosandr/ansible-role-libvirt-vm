@@ -70,7 +70,7 @@
       {% elif volume.type | default(libvirt_volume_default_type) == 'block' %}
       <source dev='{{ volume.dev }}'/>
       {% else %} {# End elif volume.type is defined #}
-      <source pool='{{ volume.pool }}' volume='{{ volume.name }}'/>
+      <source pool='{{ volume.pool | default("default") }}' volume='{{ volume.name }}'/>
       {% endif %}
       {% if volume.target is undefined %}
       <target dev='vd{{ 'abcdefghijklmnopqrstuvwxyz'[loop.index - 1] }}' {% if volume.device | default(libvirt_volume_default_device) == 'cdrom' %}bus='sata'{% endif %}/>
