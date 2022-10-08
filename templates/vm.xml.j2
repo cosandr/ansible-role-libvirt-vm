@@ -45,6 +45,7 @@
   {% if cpu_mode %}
   <cpu mode='{{ cpu_mode }}'>
     <model fallback='allow'/>
+    <topology sockets="1" dies="1" cores="{{ vm.vcpus }}" threads="1"/>
   </cpu>
   {% endif %}
   <devices>
