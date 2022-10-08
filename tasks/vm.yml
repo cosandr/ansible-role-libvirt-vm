@@ -17,14 +17,53 @@
   with_items: "{{ interfaces }}"
 
 - name: Ensure the VM is defined
-  virt:
+  community.libvirt.virt:
     command: define
     xml: "{{ lookup('template', vm.xml_file | default('vm.xml.j2')) }}"
     uri: "{{ libvirt_vm_uri | default(omit, true) }}"
   become: "{{ libvirt_vm_sudo }}"
+  register: __vm_defined
+
+- name: Generate network-scripts
+  ansible.builtin.template:
+    src: ifcfg.j2
+    dest: "/tmp/{{ vm.name }}-{{ name }}"
+    owner: root
+    group: root
+    mode: 0640
+  vars:
+    name: "ens{{ item.slot | default(index + 1) }}"
+    bootproto: "{{ item.bootproto | default('static' if item.address is defined else 'dhcp') }}"
+    gateway: "{{ item.gateway | default(false) }}"
+    default_route: "{{ item.default_route | default('yes') }}"
+    address: "{{ item.address | default(false) }}"
+    prefix: "{{ item.prefix | default(24) }}"
+    dns_servers: "{{ item.dns_servers | default(['1.1.1.1', '8.8.8.8']) }}"
+    domain: "{{ item.domain | default(false) }}"
+    mtu: "{{ item.mtu | default(1500) }}"
+  loop: "{{ vm.interfaces }}"
+  loop_control:
+    label: "{{ name }}"
+    index_var: index
+  register: __ifcfg
+  when: __vm_defined.changed
+
+- name: Customize VM
+  ansible.builtin.command:
+    cmd: >
+      virt-customize
+      --domain {{ vm.name }}
+      --truncate /etc/hostname
+      --append-line '/etc/hostname:{{ vm.name }}{% if vm.domain %}.{{ vm.domain }}{% endif %}'
+      --append-line '/etc/hosts:127.0.0.1 {{ vm.name }}{% if vm.domain %} {{ vm.name }}.{{ vm.domain }}{% endif %}'
+      {% for r in __ifcfg.results if r.dest is defined %}
+      --copy-in {{ r.dest }}:/etc/sysconfig/network-scripts
+      --move /etc/sysconfig/network-scripts/{{ r.dest | basename }}:/etc/sysconfig/network-scripts/{{ (r.dest | basename).replace(vm.name, 'ifcfg') }}
+      {% endfor %}
+  when: __ifcfg.changed
 
 - name: Ensure the VM is running and started at boot
-  virt:
+  community.libvirt.virt:
     name: "{{ vm.name }}"
     autostart: "{{ autostart | bool }}"
     state: "{{ 'running' if (start | bool) else 'shutdown' }}"
