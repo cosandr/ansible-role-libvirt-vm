@@ -77,6 +77,9 @@
       {% else %}
       <target dev='{{ volume.target }}' {% if volume.device | default(libvirt_volume_default_device) == 'cdrom' %}bus='sata'{% endif %}/>
       {% endif %}
+      {% if volume.serial | default(false) %}
+      <serial>{{ volume.serial }}</serial>
+      {% endif %}
     </disk>
 {% endfor %}
 {% for interface in interfaces %}
