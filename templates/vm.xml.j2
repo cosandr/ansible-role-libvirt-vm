@@ -103,6 +103,7 @@
       {% if interface.alias is defined %}
       <alias name='ua-{{ interface.alias }}'/>
       {% endif %}
+      <address type="pci" domain="0x0000" bus="{{ '%#x' % (interface.bus | default(1)) }}" slot="{{ '%#x' % (interface.slot | default(loop.index)) }}" function="0x0"/>
     </interface>
 {% endfor %}
 {% if console_log_enabled | bool %}
