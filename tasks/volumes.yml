@@ -30,7 +30,9 @@
     {% endif %}
     -a {{ ansible_check_mode }}
   with_items: "{{ volumes }}"
-  when: item.type | default(libvirt_volume_default_type) == 'volume'
+  when:
+    - item.type | default(libvirt_volume_default_type) == 'volume'
+    - not item.clone_image | default(false)
   environment: "{{ libvirt_vm_script_env }}"
   register: volume_result
   changed_when:
@@ -38,6 +40,65 @@
     - (volume_result.stdout | from_json).changed | default(True)
   check_mode: False
   become: true
+
+- name: Clone volume
+  ansible.builtin.command:
+    cmd: >
+      virsh vol-clone
+      {{ item.clone_image }}
+      {{ item.name }}
+      --pool {{ item.pool | default('default') }}
+  loop: "{{ volumes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: __virt_clone
+  when: item.clone_image | default(false)
+  changed_when: "'cloned from' in __virt_clone.stdout"
+  failed_when:
+    - __virt_clone.rc != 0
+    - "'already in use' not in __virt_clone.stderr"
+
+- name: Resize volumes
+  ansible.builtin.command:
+    cmd: >
+      virsh vol-resize
+      --vol {{ item.item.name }}
+      --capacity {{ item.item.capacity }}
+      --pool {{ item.item.pool | default('default') }}
+  loop: "{{ __virt_clone.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  changed_when: false
+  when:
+    - __virt_clone is defined
+    - item.changed
+
+- name: Get volume paths
+  ansible.builtin.command:
+    cmd: >
+      virsh vol-key
+      {{ item.name }}
+      --pool {{ item.pool | default('default') }}
+  loop: "{{ volumes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  changed_when: false
+  register: __virt_key
+  when: item.clone_image | default(false)
+
+- name: Ensure correct ownership
+  ansible.builtin.file:
+    path: "{{ item.stdout.strip() }}"
+    owner: "{{ libvirt_vm_script_env.VOLUME_OWNER }}"
+    group: "{{ libvirt_vm_script_env.VOLUME_GROUP }}"
+    mode: 0640
+  loop: "{{ __virt_key.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - __virt_key is defined
+    - __virt_key.results | default([])
+    - item.stdout | default(false)
 
 - name: Ensure the VM network volumes exist
   command: qemu-img create -f {{ item.source.protocol }} {{ item.source.protocol }}:{{ item.source.name }} {{ item.capacity }}
