@@ -44,6 +44,7 @@
     interfaces: "{{ vm.interfaces | default([], true) }}"
     start: "{{ vm.start | default(true) }}"
     autostart: "{{ vm.autostart | default(true) }}"
+    enable_guest_agent: "{{ vm.enable_guest_agent | default(true) }}"
     enable_console: "{{ vm.enable_console | default(false) }}"
     enable_vnc: "{{ vm.enable_vnc | default(true) }}"
     enable_spice: "{{ vm.enable_spice | default(false) }}"

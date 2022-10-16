@@ -110,6 +110,12 @@
       <address type="pci" domain="0x0000" bus="{{ '%#x' % (interface.bus | default(1)) }}" slot="{{ '%#x' % (interface.slot | default(loop.index)) }}" function="0x0"/>
     </interface>
 {% endfor %}
+{% if enable_guest_agent | bool %}
+    <channel type="unix">
+      <target type="virtio" name="org.qemu.guest_agent.0"/>
+      <address type="virtio-serial" controller="0" bus="0" port="1"/>
+    </channel>
+{% endif %}
 {% if console_log_enabled | bool %}
     <serial type='file'>
       <source path='{{ console_log_path }}'/>
