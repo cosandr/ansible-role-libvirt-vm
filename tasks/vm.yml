@@ -32,7 +32,9 @@
     group: root
     mode: 0640
   vars:
-    name: "ens{{ item.slot | default(index + 1) }}"
+    __q35_name: "enp{{ item.bus | default(index + 1) }}s0"
+    __i440_name: "ens{{ item.slot | default(index + 1) }}"
+    name: "{{ __q35_name if machine == 'q35' else __i440_name }}"
     bootproto: "{{ item.bootproto | default('static' if item.address is defined else 'dhcp') }}"
     gateway: "{{ item.gateway | default(false) }}"
     default_route: "{{ item.default_route | default('yes') }}"

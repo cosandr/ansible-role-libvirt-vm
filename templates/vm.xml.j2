@@ -107,7 +107,11 @@
       {% if interface.alias is defined %}
       <alias name='ua-{{ interface.alias }}'/>
       {% endif %}
+{% if machine == "q35" %}
+      <address type="pci" domain="0x0000" bus="{{ '%#x' % (interface.bus | default(loop.index)) }}" slot="{{ '%#x' % (interface.slot | default(0)) }}" function="0x0"/>
+{% else %}
       <address type="pci" domain="0x0000" bus="{{ '%#x' % (interface.bus | default(1)) }}" slot="{{ '%#x' % (interface.slot | default(loop.index)) }}" function="0x0"/>
+{% endif %}
     </interface>
 {% endfor %}
 {% if enable_guest_agent | bool %}
