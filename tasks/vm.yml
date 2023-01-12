@@ -58,7 +58,7 @@
       virt-customize
       --domain {{ vm.name }}
       --truncate /etc/hostname
-      --append-line '/etc/hostname:{{ vm.name }}{% if vm.domain %}.{{ vm.domain }}{% endif %}'
+      --append-line '/etc/hostname:{{ vm.name }}'
       --append-line '/etc/hosts:127.0.0.1 {{ vm.name }}{% if vm.domain %} {{ vm.name }}.{{ vm.domain }}{% endif %}'
       {% for r in __ifcfg.results if r.dest is defined %}
       --copy-in {{ r.dest }}:/etc/sysconfig/network-scripts
