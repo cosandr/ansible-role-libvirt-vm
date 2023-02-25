@@ -7,7 +7,7 @@ BOOTPROTO={{ bootproto }}
 DNS{{ loop.index }}={{ d }}
 {% endfor %}
 {% if domain %}
-DOMAIN={{ domain}}
+DOMAIN={{ domain }}
 {% endif %}
 {% if bootproto == 'static' %}
 {% if gateway %}

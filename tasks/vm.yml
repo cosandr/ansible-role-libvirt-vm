@@ -24,13 +24,10 @@
   become: "{{ libvirt_vm_sudo }}"
   register: __vm_defined
 
-- name: Generate network-scripts
-  ansible.builtin.template:
-    src: ifcfg.j2
-    dest: "/tmp/{{ vm.name }}-{{ name }}"
-    owner: root
-    group: root
-    mode: 0640
+- name: Customization tasks  # noqa no-handler
+  when:
+    - __vm_defined.changed
+    - vm.customize | default(true)
   vars:
     __q35_name: "enp{{ item.bus | default(index + 1) }}s0"
     __i440_name: "ens{{ item.slot | default(index + 1) }}"
@@ -43,30 +40,60 @@
     dns_servers: "{{ item.dns_servers | default(['1.1.1.1', '8.8.8.8']) }}"
     domain: "{{ item.domain | default(false) }}"
     mtu: "{{ item.mtu | default(1500) }}"
-  loop: "{{ vm.interfaces }}"
-  loop_control:
-    label: "{{ name }}"
-    index_var: index
-  register: __ifcfg
-  when:
-    - __vm_defined.changed
-    - vm.customize | default(true)
+  block:
+    - name: Create temporary dir
+      ansible.builtin.file:
+        path: "/tmp/virt-customize-{{ vm.name }}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0750
 
-- name: Customize VM
-  ansible.builtin.command:
-    cmd: >
-      virt-customize
-      --domain {{ vm.name }}
-      --truncate /etc/hostname
-      --append-line '/etc/hostname:{{ vm.name }}'
-      --append-line '/etc/hosts:127.0.0.1 {{ vm.name }}{% if vm.domain %} {{ vm.name }}.{{ vm.domain }}{% endif %}'
-      {% for r in __ifcfg.results if r.dest is defined %}
-      --copy-in {{ r.dest }}:/etc/sysconfig/network-scripts
-      --move /etc/sysconfig/network-scripts/{{ r.dest | basename }}:/etc/sysconfig/network-scripts/{{ (r.dest | basename).replace(vm.name, 'ifcfg') }}
-      {% endfor %}
-  when:
-    - __ifcfg.changed or __vm_defined.changed
-    - vm.customize | default(true)
+    - name: Copy customization script
+      ansible.builtin.copy:
+        src: customize_net.sh
+        dest: "/tmp/virt-customize-{{ vm.name }}/customize_net"
+        owner: root
+        group: root
+        mode: 0750
+
+    - name: Generate network-scripts
+      ansible.builtin.template:
+        src: ifcfg.j2
+        dest: "/tmp/virt-customize-{{ vm.name }}/ifcfg-{{ name }}"
+        owner: root
+        group: root
+        mode: 0640
+      loop: "{{ vm.interfaces }}"
+      loop_control:
+        label: "{{ name }}"
+        index_var: index
+
+    - name: Generate systemd-networkd network configs
+      ansible.builtin.template:
+        src: networkd.network.j2
+        dest: "/tmp/virt-customize-{{ vm.name }}/{{ name }}.network"
+        owner: root
+        group: root
+        mode: 0640
+      loop: "{{ vm.interfaces }}"
+      loop_control:
+        label: "{{ name }}"
+        index_var: index
+
+    - name: Customize VM  # noqa no-changed-when
+      ansible.builtin.command:
+        cmd: >
+          virt-customize
+          --domain {{ vm.name }}
+          --truncate /etc/hostname
+          --append-line '/etc/hostname:{{ vm.name }}'
+          --append-line '/etc/hosts:127.0.0.1 {{ vm.name }}{% if vm.domain %} {{ vm.name }}.{{ vm.domain }}{% endif %}'
+          --copy-in /tmp/virt-customize-{{ vm.name }}:/tmp
+          --move /tmp/virt-customize-{{ vm.name }}:/tmp/virt-customize
+          --chmod 0755:/tmp/virt-customize/customize_net
+          --run-command /tmp/virt-customize/customize_net
+          --delete /tmp/virt-customize
 
 - name: Ensure the VM is running and started at boot
   community.libvirt.virt:
