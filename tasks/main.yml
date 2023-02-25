@@ -40,6 +40,8 @@
     machine_default: "{{ none if libvirt_vm_engine == 'kvm' else 'pc' }}"
     machine: "{{ vm.machine | default(machine_default, true) }}"
     cpu_mode: "{{ vm.cpu_mode | default(libvirt_cpu_mode_default) }}"
+    cpu_model_name: "{{ vm.cpu_model_name | default(libvirt_vm_cpu_model_name_default) }}"
+    cpu_model_options: "{{ vm.cpu_model_options | default(libvirt_vm_cpu_model_options_default) }}"
     volumes: "{{ vm.volumes | default([], true) }}"
     interfaces: "{{ vm.interfaces | default([], true) }}"
     start: "{{ vm.start | default(true) }}"

@@ -71,6 +71,12 @@ libvirt_vms:
       # Virtual machine CPU mode.
       cpu_mode: "{{ libvirt_vm_cpu_mode | default(libvirt_cpu_mode_default, true) }}"
 
+      # Virtual machine CPU model options
+      cpu_model_options: "{{ libvirt_vm_cpu_model_options | default(libvirt_vm_cpu_model_options_default) }}"
+
+      # Virtual machine CPU model name
+      cpu_model_name: "{{ libvirt_vm_cpu_model_name_default }}"
+
       # List of volumes.
       volumes: "{{ libvirt_vm_volumes }}"
 
@@ -85,7 +91,7 @@ libvirt_vms:
 
       # XML template file to source domain definition
       xml_file: vm.xml.j2
-      
+
       # May be one of: bios, or efi.
       boot_firmware: bios
 
@@ -101,6 +107,10 @@ libvirt_vm_sudo: true
 
 # Default CPU mode if libvirt_vm_cpu_mode or vm.cpu_mode is undefined
 libvirt_cpu_mode_default: "{{ 'host-passthrough' if libvirt_vm_engine == 'kvm' else 'host-model' }}"
+
+libvirt_vm_cpu_model_name_default: ""
+libvirt_vm_cpu_model_options_default:
+    fallback: 'allow'
 
 ### DEPRECATED ###
 # Use the above settings for each item within `libvirt_vms`, instead of the
