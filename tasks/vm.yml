@@ -28,6 +28,7 @@
   when:
     - __vm_defined.changed
     - vm.customize | default(true)
+  tags: ["customize"]
   vars:
     __q35_name: "enp{{ item.bus | default(index + 1) }}s0"
     __i440_name: "ens{{ item.slot | default(index + 1) }}"

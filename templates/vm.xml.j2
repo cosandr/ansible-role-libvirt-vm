@@ -151,4 +151,11 @@
 {% endif %}
     <rng model="virtio"><backend model="random">/dev/urandom</backend></rng>
   </devices>
+  {% if seclabel_options %}
+  <seclabel{% for k, v in seclabel_options.items() %} {{ k }}='{{ v }}'{% endfor %}>
+  {% if seclabel_label %}
+    <label>{{ seclabel_label }}</label>
+  {% endif %}
+  </seclabel>
+  {% endif %}
 </domain>
