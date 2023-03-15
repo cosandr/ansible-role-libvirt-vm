@@ -53,6 +53,7 @@
     boot_firmware: "{{ vm.boot_firmware | default('bios', true) | lower }}"
     seclabel_options: "{{ vm.seclabel_options | default({}) }}"
     seclabel_label: "{{ vm.seclabel_label | default('') }}"
+    qemu_commandline_args: "{{ vm.qemu_commandline_args | default([]) }}"
   with_items: "{{ libvirt_vms }}"
   loop_control:
     loop_var: vm

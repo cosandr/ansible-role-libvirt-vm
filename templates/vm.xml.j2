@@ -158,4 +158,11 @@
   {% endif %}
   </seclabel>
   {% endif %}
+  {% if qemu_commandline_args %}
+  <commandline xmlns="http://libvirt.org/schemas/domain/qemu/1.0">
+    {% for arg in qemu_commandline_args %}
+    <arg value='{{ arg }}'/>
+    {% endfor %}
+  </commandline>
+  {% endif %}
 </domain>
