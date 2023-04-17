@@ -47,6 +47,9 @@
     {% if cpu_model_name %}
     <model{% for k, v in cpu_model_options.items() %} {{ k }}='{{ v }}'{% endfor %}>{{ cpu_model_name }}</model>
     {% endif %}
+    {% for f in cpu_features %}
+    <feature policy="{{ f.policy | default('require') }}" name="{{ f.name | default(f) }}"/>
+    {% endfor %}
     <topology sockets="1" dies="1" cores="{{ vm.vcpus }}" threads="1"/>
   </cpu>
   {% endif %}
