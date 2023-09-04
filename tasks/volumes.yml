@@ -50,7 +50,7 @@
       --pool {{ item.pool | default('default') }}
   loop: "{{ volumes }}"
   loop_control:
-    label: "{{ item.name }}"
+    label: "{{ item.name | default(item) }}"
   register: __virt_clone
   when: item.clone_image | default(false)
   changed_when: "'cloned from' in __virt_clone.stdout"
@@ -67,7 +67,7 @@
       --pool {{ item.item.pool | default('default') }}
   loop: "{{ __virt_clone.results }}"
   loop_control:
-    label: "{{ item.item.name }}"
+    label: "{{ item.item.name | default(item.item) }}"
   changed_when: false
   when:
     - __virt_clone is defined
@@ -81,7 +81,7 @@
       --pool {{ item.pool | default('default') }}
   loop: "{{ volumes }}"
   loop_control:
-    label: "{{ item.name }}"
+    label: "{{ item.name | default(item) }}"
   changed_when: false
   register: __virt_key
   when: item.clone_image | default(false)
@@ -94,7 +94,7 @@
     mode: 0640
   loop: "{{ __virt_key.results }}"
   loop_control:
-    label: "{{ item.item.name }}"
+    label: "{{ item.item.name | default(item.item) }}"
   when:
     - __virt_key is defined
     - __virt_key.results | default([])
