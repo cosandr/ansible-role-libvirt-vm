@@ -83,10 +83,24 @@
         owner: root
         group: root
         mode: 0640
+      when: not networkd_config | default(false)
       loop: "{{ vm.interfaces }}"
       loop_control:
         label: "{{ name }}"
         index_var: index
+
+    - name: Copy networkd configs from inventory
+      ansible.builtin.copy:
+        dest: "/tmp/virt-customize-{{ vm.name }}/{{ item.key }}.network"
+        owner: root
+        group: root
+        mode: "0640"
+        content: |
+          {{ ansible_managed | comment }}
+          {{ item.value }}
+      loop: "{{ networkd_config | default({}) | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
 
     - name: Customize VM  # noqa no-changed-when
       ansible.builtin.command:
