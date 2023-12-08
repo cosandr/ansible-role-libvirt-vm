@@ -159,6 +159,13 @@
       </source>
     </hostdev>
   {% endfor %}
+  {% for uuid in mdev_uuids %}
+    <hostdev mode='subsystem' type='mdev' managed='no' model='vfio-pci' display='off'>
+      <source>
+        <address uuid='{{ uuid }}'/>
+      </source>
+    </hostdev>
+  {% endfor %}
     <rng model="virtio"><backend model="random">/dev/urandom</backend></rng>
   </devices>
   {% if seclabel_options %}

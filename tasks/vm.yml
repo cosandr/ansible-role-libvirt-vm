@@ -22,6 +22,13 @@
     usb_device: "{{ item }}"
   with_items: "{{ usb_devices }}"
 
+- name: Validate mdev devices
+  ansible.builtin.stat:
+    path: "/sys/bus/mdev/devices/{{ item }}"
+  register: __check
+  failed_when: not __check.stat.exists
+  loop: "{{ mdev_uuids }}"
+
 - name: Ensure the VM is defined
   community.libvirt.virt:
     command: define

@@ -46,6 +46,7 @@
     volumes: "{{ vm.volumes | default([], true) }}"
     interfaces: "{{ vm.interfaces | default([], true) }}"
     usb_devices: "{{ vm.usb_devices | default([], false) }}"
+    mdev_uuids: "{{ vm.mdev_uuids | default([]) }}"
     start: "{{ vm.start | default(true) }}"
     autostart: "{{ vm.autostart | default(true) }}"
     enable_console: "{{ vm.enable_console | default(false) }}"
