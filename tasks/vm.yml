@@ -39,7 +39,7 @@
 
 - name: Customization tasks  # noqa no-handler
   when:
-    - __vm_defined.changed
+    - __vm_defined.created is defined
     - vm.customize | default(true)
   tags: ["customize"]
   vars:
