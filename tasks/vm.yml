@@ -60,7 +60,7 @@
   vars:
     __q35_name: "enp{{ item.bus | default(index + 1) }}s0"
     __i440_name: "ens{{ item.slot | default(index + 1) }}"
-    name: "{{ __q35_name if machine == 'q35' else __i440_name }}"
+    ifname: "{{ __q35_name if machine == 'q35' else __i440_name }}"
     bootproto: "{{ item.bootproto | default('static' if item.address is defined else 'dhcp') }}"
     gateway: "{{ item.gateway | default(false) }}"
     default_route: "{{ item.default_route | default('yes') }}"
@@ -89,26 +89,26 @@
     - name: Generate network-scripts
       ansible.builtin.template:
         src: ifcfg.j2
-        dest: "/tmp/virt-customize-{{ vm.name }}/ifcfg-{{ name }}"
+        dest: "/tmp/virt-customize-{{ vm.name }}/ifcfg-{{ ifname }}"
         owner: root
         group: root
         mode: 0640
       loop: "{{ vm.interfaces }}"
       loop_control:
-        label: "{{ name }}"
+        label: "{{ ifname }}"
         index_var: index
 
     - name: Generate systemd-networkd network configs
       ansible.builtin.template:
         src: networkd.network.j2
-        dest: "/tmp/virt-customize-{{ vm.name }}/{{ name }}.network"
+        dest: "/tmp/virt-customize-{{ vm.name }}/{{ ifname }}.network"
         owner: root
         group: root
         mode: 0640
       when: not networkd_config | default(false)
       loop: "{{ vm.interfaces }}"
       loop_control:
-        label: "{{ name }}"
+        label: "{{ ifname }}"
         index_var: index
 
     - name: Copy networkd configs from inventory
