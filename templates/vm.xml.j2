@@ -53,6 +53,12 @@
     <topology sockets="1" dies="1" cores="{{ vm.vcpus }}" threads="1"/>
   </cpu>
   {% endif %}
+{% if virtiofs_mounts %}
+  <memoryBacking>
+    <source type='memfd'/>
+    <access mode='shared'/>
+  </memoryBacking>
+{% endif %}
   <devices>
     <emulator>{{ libvirt_vm_emulator }}</emulator>
 {% for volume in volumes %}
@@ -87,6 +93,13 @@
       <serial>{{ volume.serial }}</serial>
       {% endif %}
     </disk>
+{% endfor %}
+{% for mount in virtiofs_mounts %}
+    <filesystem type='mount' accessmode='passthrough'>
+      <driver type='virtiofs' queue='1024'/>
+      <source dir='{{ mount.source }}'/>
+      <target dir='{{ mount.target }}'/>
+    </filesystem>
 {% endfor %}
 {% for interface in interfaces %}
 {% if interface.type is defined and interface.type == 'direct' %}

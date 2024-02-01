@@ -29,6 +29,21 @@
   failed_when: not __check.stat.exists
   loop: "{{ mdev_uuids }}"
 
+- name: Validate virtiofs mounts
+  ansible.builtin.assert:
+    that:
+      - virtiofs_mounts | length == virtiofs_mounts | selectattr('source', 'defined') | length
+      - virtiofs_mounts | length == virtiofs_mounts | selectattr('target', 'defined') | length
+
+- name: Ensure virtiofs mounts exist on host
+  ansible.builtin.stat:
+    path: "{{ item.source }}"
+  register: __check
+  failed_when: not __check.stat.exists
+  loop: "{{ virtiofs_mounts }}"
+  loop_control:
+    label: "{{ item.source }}"
+
 - name: Ensure the VM is defined
   community.libvirt.virt:
     command: define
