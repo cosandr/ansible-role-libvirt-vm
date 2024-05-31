@@ -31,7 +31,7 @@
     -a {{ ansible_check_mode }}
   with_items: "{{ volumes }}"
   when:
-    - item.type | default(libvirt_volume_default_type) == 'volume'
+    - item.type | default(libvirt_volume_default_type) == 'volume' or item.create_volume | default(false)
     - not item.clone_image | default(false)
   environment: "{{ libvirt_vm_script_env }}"
   register: volume_result
