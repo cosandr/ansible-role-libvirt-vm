@@ -11,3 +11,8 @@ if [ -f /etc/systemd/system/multi-user.target.wants/systemd-networkd.service ]; 
 elif [ -d /etc/sysconfig/network-scripts ]; then
     find "$TMPDIR" -type f -name 'ifcfg-*' -exec install -o root -g root -m644 -t /etc/sysconfig/network-scripts {} \;
 fi
+
+# Relabel if host doesn't use SELinux
+if grep -q '^SELINUX=enforcing' /etc/selinux/config && ! grep -q selinuxfs /proc/mounts; then
+    touch /.autorelabel
+fi
