@@ -179,6 +179,16 @@
       </source>
     </hostdev>
   {% endfor %}
+  {% for pci_device in pci_devices %}
+    <hostdev mode='subsystem' type='pci' {% for k, v in (pci_device.attributes | default({'managed': 'yes'})).items() %} {{ k }}='{{ v }}'{% endfor %}>
+      <source>
+        <address{% for k, v in pci_device.address.items() %} {{ k }}='{{ v }}'{% endfor %}/>
+      </source>
+{% if pci_device.raw | default('') %}
+{{ pci_device.raw | indent(6) }}
+{% endif %}
+    </hostdev>
+  {% endfor %}
     <rng model="virtio"><backend model="random">/dev/urandom</backend></rng>
   </devices>
   {% if seclabel_options %}
