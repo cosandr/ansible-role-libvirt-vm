@@ -92,6 +92,9 @@
       {% if volume.serial | default(false) %}
       <serial>{{ volume.serial }}</serial>
       {% endif %}
+      {% if volume.blockio | default({}) %}
+      <blockio{% for k, v in volume.blockio.items() %} {{ k }}='{{ v }}'{% endfor %}/>
+      {% endif %}
     </disk>
 {% endfor %}
 {% for mount in virtiofs_mounts %}
