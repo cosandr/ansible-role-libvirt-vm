@@ -26,7 +26,7 @@
       {# NOTE: pflash requires qemu 1.6 or newer. There are alternatives for older versions, but
                they do not work with secure boot. See OVMF readme for an overview #}
       <loader readonly='yes' type='pflash'>{{ libvirt_vm_ovmf_efi_firmware_path }}</loader>
-      <nvram template='{{ libvirt_vm_ovmf_efi_variable_store_path }}'/>
+      <nvram template='{{ libvirt_vm_ovmf_efi_variable_store_path }}' templateFormat='{{ libvirt_vm_ovmf_efi_variable_store_format }}'/>
     {% endif %}
   </os>
   <features>
