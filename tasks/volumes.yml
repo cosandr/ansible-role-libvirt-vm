@@ -103,7 +103,9 @@
 - name: Ensure the VM network volumes exist
   ansible.builtin.command: qemu-img create -f {{ item.source.protocol }} {{ item.source.protocol }}:{{ item.source.name }} {{ item.capacity }}
   with_items: "{{ volumes }}"
-  when: item.type | default(libvirt_volume_default_type) == 'network'
+  when:
+    - item.type | default(libvirt_volume_default_type) == 'network'
+    - item.copy_image | default('') == ''
   register: volume_result_network
   # 0 is OK, 1 is an existing image
   failed_when: volume_result_network.rc >= 2
@@ -111,4 +113,32 @@
     - volume_result_network is success
     - volume_result_network.rc == 1
   check_mode: false
+  become: true
+
+- name: Copy RBD image
+  ansible.builtin.command: "rbd cp {{ item.copy_image }} {{ item.source.name }}"
+  with_items: "{{ volumes }}"
+  when:
+    - item.type | default(libvirt_volume_default_type) == 'network'
+    - item.copy_image | default('') != ''
+    - item.source.protocol == 'rbd'
+  register: rbd_cp_result
+  # 0 is OK, 17 is existing image
+  failed_when: rbd_cp_result.rc not in [0, 17]
+  changed_when: rbd_cp_result.rc == 0
+  check_mode: false
+  become: true
+
+- name: Resize RBD images
+  ansible.builtin.command: "rbd resize {{ item.source.name }} --size {{ item.capacity }}"
+  with_items: "{{ volumes }}"
+  when:
+    - item.type | default(libvirt_volume_default_type) == 'network'
+    - item.source.protocol == 'rbd'
+  register: rbd_resize_result
+  failed_when:
+    - rbd_resize_result.rc != 0
+    # Exit code is 22, but it's also 22 when trying to shrink without --allow-shrink
+    - "'new size is equal to original size' not in rbd_resize_result.stderr"
+  changed_when: rbd_resize_result.rc == 0
   become: true
